@@ -62,6 +62,31 @@ This file records meaningful project decisions and implementation steps so the p
 
 These require external project configuration or a later security-testing stage and must not be faked.
 
+## 2026-09-11 — Private data foundation
+
+### Implemented
+
+- Added versioned Supabase migration for `profiles`, `preferences`, `favorites` and `saved_comparisons`.
+- Added automatic profile/preferences creation when a new auth user is created.
+- Added ownership indexes and timestamp maintenance triggers.
+- Enabled Row Level Security on every user-owned table.
+- Added explicit authenticated CRUD policies keyed to `auth.uid()`.
+- Revoked anonymous table access explicitly.
+- Added `docs/AUTH_SETUP.md` with the external Supabase configuration runbook.
+
+### Security notes
+
+- User-owned tables do not rely on frontend filtering for isolation.
+- Cross-user access must be denied by PostgreSQL RLS even if a malicious client changes IDs or request parameters.
+- The migration intentionally contains no project-specific secrets.
+
+### Deliberately not implemented yet
+
+- Applying the migration to the user's real Supabase project.
+- Automated two-user RLS penetration tests.
+- Real provider credentials.
+- Real motorsport data ingestion.
+
 ## Documentation rule
 
 Every substantial architectural, security, product or UX decision should be added here before or together with the implementation that depends on it.
