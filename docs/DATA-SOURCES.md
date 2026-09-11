@@ -1,31 +1,32 @@
 # RaceMetrics data sources
 
-## Primary F1 catalog source
+## Primary F1 catalog and analytics source
 
-RaceMetrics uses Jolpica F1 as the first verified upstream adapter for Formula 1 catalog data.
+RaceMetrics uses Jolpica F1 as the first verified upstream source for Formula 1 reference data, race classifications and championship standings.
 
-Jolpica F1 is the open-source successor to the Ergast F1 API and exposes compatible endpoints for drivers, constructors, circuits and races. The project documents a maximum API result limit of 100 and requests a custom identifying User-Agent.
+Jolpica F1 is the open-source successor to the Ergast F1 API and exposes compatible endpoints for drivers, constructors, circuits, races, results and standings. Its documented API limit is 100 records per request, so RaceMetrics paginates result ingestion instead of silently treating a truncated response as complete.
 
-Reference: https://github.com/jolpica/jolpica-f1/blob/main/docs/README.md
+Reference: https://github.com/jolpica/jolpica-f1
 
 ## Integration boundary
 
-The browser does not call the Jolpica upstream host directly. RaceMetrics requests `/api/f1` on its own origin. A Netlify Function validates the resource and season, adds the required User-Agent and proxies only the allowlisted catalog resources.
+The browser does not call the Jolpica upstream host directly. RaceMetrics requests `/api/f1` on its own origin. A Netlify Function validates the resource, season, round, limit and offset, adds the required User-Agent and proxies only the allowlisted resources.
 
 ```text
-Explore
-  |
-  v
+Explore / Analytics
+       |
+       v
 motorsportRepository
-  |
-  v
-jolpicaRepository
-  |
-  v
-/api/f1
-  |
-  v
-Jolpica F1
+       |
+       +--> jolpicaRepository
+       |
+       +--> jolpicaResultsRepository
+       |
+       v
+   /api/f1
+       |
+       v
+  Jolpica F1
 ```
 
 ## Current verified resources
@@ -34,14 +35,21 @@ Jolpica F1
 - Constructors / teams
 - Circuits
 - Races / calendar
+- Race results
+- Driver standings
+- Constructor standings
 
-The current adapter deliberately does not infer a driver's constructor from the driver catalog endpoint. The domain therefore allows `teamId: null` until a result/standings ingestion layer supplies a defensible relationship.
+Race results are normalized into `RaceResult` records containing driver, constructor, grid, finish position, points, status and fastest-lap fields when supplied by the upstream response.
 
-Likewise, circuit lap counts remain `null` because the catalog endpoint does not provide a reliable lap-count field. Missing information stays missing instead of becoming decorative fiction.
+Driver and constructor championship tables are normalized into typed standing records. Driver-to-constructor relationships are now derived from actual race-result evidence for the season, rather than inferred from the driver reference endpoint.
 
-## Fallback behavior
+The adapter still preserves `null` when upstream data does not provide a defensible value. Missing information is not converted into decorative fiction.
 
-If the upstream service is unavailable or returns an unexpected payload, the repository falls back to the explicitly fictional preview catalog. The UI labels this state as preview and does not present it as official race data.
+## Pagination and resilience
+
+The server proxy caps each request at 100 records. The verified result adapter reads the upstream total and requests subsequent pages sequentially, avoiding the common failure mode where a large season is presented as complete after only the first page.
+
+If any verified season ingestion request fails, the season analytics repository returns no verified analytics payload. The catalog repository may still fall back to the explicitly fictional preview catalog. This prevents a partial analytics payload from being presented as authoritative.
 
 ## Licensing and operational note
 
