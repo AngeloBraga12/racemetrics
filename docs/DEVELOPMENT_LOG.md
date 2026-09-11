@@ -60,19 +60,19 @@ This file records meaningful project decisions and implementation steps so the p
 - Automated browser security tests.
 - MFA enrollment UX.
 
-These require external project configuration or a later security-testing stage and must not be faked.
-
 ## 2026-09-11 — Private data foundation
 
 ### Implemented
 
-- Added versioned Supabase migration for `profiles`, `preferences`, `favorites` and `saved_comparisons`.
+- Consolidated private-data schema into one versioned migration.
+- Added `profiles`, `preferences`, `favorites` and `saved_comparisons`.
 - Added automatic profile/preferences creation when a new auth user is created.
 - Added ownership indexes and timestamp maintenance triggers.
 - Enabled Row Level Security on every user-owned table.
 - Added explicit authenticated CRUD policies keyed to `auth.uid()`.
 - Revoked anonymous table access explicitly.
 - Added `docs/AUTH_SETUP.md` with the external Supabase configuration runbook.
+- Removed the superseded duplicate migration before production deployment so fresh environments have one authoritative schema history.
 
 ### Security notes
 
@@ -80,12 +80,31 @@ These require external project configuration or a later security-testing stage a
 - Cross-user access must be denied by PostgreSQL RLS even if a malicious client changes IDs or request parameters.
 - The migration intentionally contains no project-specific secrets.
 
+## 2026-09-11 — Domain data and Explore foundation
+
+### Implemented
+
+- Added TypeScript domain contracts for drivers, teams, circuits, races and catalog state.
+- Added an explicit data-status field so preview fixtures cannot silently masquerade as verified motorsport data.
+- Added a repository boundary between UI and data source.
+- Added a clearly fictional preview catalog for development only.
+- Added catalog search across drivers, teams, races and circuits.
+- Added the first Explore screen with entity filters and search.
+- Connected Dashboard summary structures to the domain catalog instead of maintaining a second unrelated mock model.
+- Kept preview values visibly labeled and avoided invented official race results.
+- Kept Explore styling isolated in its feature stylesheet to prevent global visual drift.
+
+### Data architecture decision
+
+The UI consumes a repository contract rather than importing an API client directly. The next verified ingestion source can therefore replace the preview adapter without redesigning the Explore screens. This follows the project's separation between ingestion, normalization, domain data and presentation.
+
 ### Deliberately not implemented yet
 
-- Applying the migration to the user's real Supabase project.
-- Automated two-user RLS penetration tests.
-- Real provider credentials.
-- Real motorsport data ingestion.
+- Verified live motorsport ingestion.
+- Official 2026 championship values.
+- Persistent favorite actions from Explore.
+- Driver/team/race/circuit detail pages.
+- Automated browser tests.
 
 ## Documentation rule
 
