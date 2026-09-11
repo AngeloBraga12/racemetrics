@@ -8,7 +8,7 @@ export type Driver = {
   shortName: string
   nationality: string
   number: number | null
-  teamId: string
+  teamId: string | null
   status: DataStatus
 }
 
