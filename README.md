@@ -1,45 +1,68 @@
 # RaceMetrics
 
-Plataforma web de análise e visualização de dados de automobilismo, construída para explorar temporadas, comparar desempenho e transformar resultados em insights.
+RaceMetrics is a private, authenticated motorsport analytics workspace built to explore seasons, compare performance and turn race results into defensible insights.
 
-## Visão do produto
+The goal is not to build another generic dashboard. The interface is deliberately shaped around motorsport concepts such as classification, gaps, laps, sectors, stints, qualifying and race pace.
 
-O RaceMetrics será uma aplicação autenticada, com contas individuais e suporte a login por e-mail/senha e provedores OAuth, inicialmente Google e Microsoft.
+## Product model
 
-A experiência principal será organizada em:
+Each person has an individual account. User-owned information is private and isolated by server-side authorization.
+
+Planned authentication methods:
+
+- Email + password
+- Google
+- Microsoft
+
+Main product areas:
 
 - Dashboard
 - Explore
 - Compare
 - Analytics
 
-Recursos avançados planejados incluem perfis de pilotos e equipes, circuit explorer, Race Insights, favoritos, Race Replay, simulações What If? e AI Race Analyst.
+Planned advanced features:
 
-## Princípios técnicos
+- Driver and team profiles
+- Circuit Explorer
+- Race Insights
+- Favorites and saved comparisons
+- Race Replay
+- What If?
+- AI Race Analyst
+
+## Engineering principles
 
 - TypeScript strict
-- Componentização e arquitetura preparada para evolução
-- Segurança tratada desde o desenho da aplicação
-- Autenticação e autorização separadas de regras de negócio
-- Validação de entradas e proteção de endpoints
-- Testes automatizados para fluxos críticos
-- CI para validação de qualidade antes de merge
-- Dados de automobilismo desacoplados da interface
+- Small, domain-oriented components
+- Motorsport data separated from presentation
+- Authentication separated from business rules
+- Server-side authorization for every private resource
+- Strong input validation
+- Security tests for critical flows
+- Accessibility and responsive behavior as release requirements
+- CI validation before merge
+- No fabricated data presented as official or live data
 
-## Status
+## Anti-generic design rule
 
-**v0.1 · Fundação da interface**
+The product must not resemble an AI-generated template. We avoid repetitive card grids, decorative gradients, meaningless charts and fake statistics. Visual patterns must have a reason in the information architecture of a motorsport analysis tool.
 
-A primeira etapa estabelece a identidade visual, navegação principal e estrutura do dashboard. Os dados exibidos atualmente são placeholders e não representam resultados oficiais.
+See `docs/DESIGN.md` for the visual rules.
 
-## Roadmap
+## Documentation
 
-1. Fundação de UI e arquitetura
-2. Autenticação e contas
-3. Exploração de pilotos, equipes, corridas e circuitos
-4. Comparações e visualizações
-5. Analytics e Race Insights
-6. Integração com dados reais
-7. Recursos avançados
-8. Testes de segurança, performance e acessibilidade
-9. CI/CD e release de produção
+- `docs/ARCHITECTURE.md` — system boundaries and data flow
+- `docs/SECURITY.md` — authentication, authorization and security gates
+- `docs/DESIGN.md` — visual language and anti-generic rules
+- `docs/ROADMAP.md` — product and engineering roadmap
+- `docs/DEVELOPMENT_LOG.md` — decisions and implementation history
+- `CONTRIBUTING.md` — quality and contribution rules
+
+## Current status
+
+**v0.1 · Foundation**
+
+The current release establishes the initial React + TypeScript + Vite application, the dashboard shell and the motorsport-specific visual direction. Displayed values are interface placeholders and are not official race results.
+
+Authentication, real data, backend infrastructure and production security are intentionally implemented in later phases after the boundaries and testing strategy are established.
