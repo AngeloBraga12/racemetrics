@@ -120,14 +120,29 @@ The UI consumes a repository contract rather than importing an API client direct
 - Preview fixtures remain explicitly fictional.
 - Upstream failure produces a labeled preview state rather than fabricated live data.
 
+## 2026-09-11 — Verified F1 results and standings
+
+### Implemented
+
+- Added normalized `RaceResult`, `DriverStanding` and `ConstructorStanding` domain contracts.
+- Extended the server-side F1 proxy to results and both championship standings resources.
+- Added validated season, round, limit and offset parameters to the proxy.
+- Added paginated season-result ingestion with an explicit 100-record page ceiling.
+- Added normalization for grid position, finish position, points, status and fastest-lap fields.
+- Added verified driver and constructor championship standings ingestion.
+- Derived driver-to-constructor relationships from actual race-result evidence rather than reference-data inference.
+- Added a cached repository method for a complete verified season payload.
+- Kept verified analytics unavailable when upstream ingestion fails instead of mixing partial official data with fabricated values.
+- Updated data-source documentation with the new ingestion boundary, pagination and licensing notes.
+
 ### Deliberately not implemented yet
 
-- Race result ingestion and standings normalization.
-- Driver-to-constructor relationships from results/standings.
 - Driver/team/race/circuit detail pages.
 - Persistent favorite actions from Explore.
-- Automated browser tests.
+- Automated browser security tests.
 - Production deployment verification of the Netlify Function.
+- Qualifying and sprint result normalization.
+- Lap-by-lap and pit-stop analytics.
 
 ## Documentation rule
 
