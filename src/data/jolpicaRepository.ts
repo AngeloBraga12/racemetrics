@@ -22,61 +22,30 @@ const readArray = <T>(payload: JolpicaResponse, table: string, key: string): T[]
 
 export const fetchVerifiedCatalog = async (season: number): Promise<MotorsportCatalog> => {
   const [driversPayload, constructorsPayload, circuitsPayload, racesPayload] = await Promise.all([
-    request('drivers', season),
-    request('constructors', season),
-    request('circuits', season),
-    request('races', season),
+    request('drivers', season), request('constructors', season), request('circuits', season), request('races', season),
   ])
-
   const constructorRecords = readArray<ConstructorRecord>(constructorsPayload, 'ConstructorTable', 'Constructors')
   const driverRecords = readArray<DriverRecord>(driversPayload, 'DriverTable', 'Drivers')
   const circuitRecords = readArray<CircuitRecord>(circuitsPayload, 'CircuitTable', 'Circuits')
   const raceRecords = readArray<RaceRecord>(racesPayload, 'RaceTable', 'Races')
 
-  const teams: Team[] = constructorRecords.map((team) => ({
-    id: team.constructorId,
-    name: team.name,
-    shortName: team.name,
-    country: team.nationality ?? 'Unknown',
-    status: 'verified',
-  }))
-
-  const teamIds = new Set(teams.map((team) => team.id))
-  const fallbackTeamId = teams[0]?.id ?? 'unassigned'
-
+  const teams: Team[] = constructorRecords.map((team) => ({ id: team.constructorId, name: team.name, shortName: team.name, country: team.nationality ?? 'Unknown', status: 'verified' }))
   const drivers: Driver[] = driverRecords.map((driver) => ({
     id: driver.driverId,
     fullName: `${driver.givenName} ${driver.familyName}`,
     shortName: driver.code ?? driver.driverId.toUpperCase().slice(0, 3),
     nationality: driver.nationality ?? 'Unknown',
     number: driver.permanentNumber ? Number(driver.permanentNumber) : null,
-    teamId: fallbackTeamId,
+    teamId: null,
     status: 'verified',
   }))
-
   const circuits: Circuit[] = circuitRecords.map((circuit) => ({
-    id: circuit.circuitId,
-    name: circuit.circuitName,
-    location: circuit.Location?.locality ?? 'Unknown',
-    country: circuit.Location?.country ?? 'Unknown',
-    laps: null,
-    status: 'verified',
+    id: circuit.circuitId, name: circuit.circuitName, location: circuit.Location?.locality ?? 'Unknown', country: circuit.Location?.country ?? 'Unknown', laps: null, status: 'verified',
   }))
-
-  const circuitIds = new Set(circuits.map((circuit) => circuit.id))
   const races: Race[] = raceRecords.map((race) => ({
-    id: `${race.season}-${race.round}-${race.Circuit.circuitId}`,
-    season: Number(race.season),
-    round: Number(race.round),
-    name: race.raceName,
-    circuitId: circuitIds.has(race.Circuit.circuitId) ? race.Circuit.circuitId : race.Circuit.circuitId,
-    date: race.date ?? null,
-    status: 'verified',
+    id: `${race.season}-${race.round}-${race.Circuit.circuitId}`, season: Number(race.season), round: Number(race.round), name: race.raceName, circuitId: race.Circuit.circuitId, date: race.date ?? null, status: 'verified',
   }))
 
-  if (!teams.length || !drivers.length || !circuits.length || !races.length || !teamIds.size) {
-    throw new Error('Verified F1 catalog is incomplete')
-  }
-
+  if (!teams.length || !drivers.length || !circuits.length || !races.length) throw new Error('Verified F1 catalog is incomplete')
   return { season, teams, drivers, circuits, races }
 }
