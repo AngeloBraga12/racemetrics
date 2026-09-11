@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@netlify/functions": "^3",
     "@supabase/supabase-js": "^2",
     "@vitejs/plugin-react": "latest",
     "vite": "latest",
