@@ -135,14 +135,32 @@ The UI consumes a repository contract rather than importing an API client direct
 - Kept verified analytics unavailable when upstream ingestion fails instead of mixing partial official data with fabricated values.
 - Updated data-source documentation with the new ingestion boundary, pagination and licensing notes.
 
+## 2026-09-11 — First Analytics product surface
+
+### Implemented
+
+- Added a dedicated Analytics view connected to verified 2026 driver and constructor standings.
+- Added championship leader, round coverage and constructor-count KPIs.
+- Added a real driver standings table with points and wins.
+- Added a provenance-oriented leader signal panel.
+- Added an explicit unavailable state when verified standings cannot be loaded.
+- Connected Analytics to primary navigation without changing the motorsport visual language.
+- Avoided decorative fake charts and unsupported metrics until their ingestion exists.
+
+### CI repair
+
+The first CI run failed before dependency installation because `actions/setup-node` was configured with `cache: npm` while the repository had no lockfile. The workflow was corrected to remove the lockfile-dependent cache setting. This is an infrastructure fix, not a suppression of the build gate.
+
 ### Deliberately not implemented yet
 
 - Driver/team/race/circuit detail pages.
 - Persistent favorite actions from Explore.
 - Automated browser security tests.
 - Production deployment verification of the Netlify Function.
-- Qualifying and sprint result normalization.
+- Qualifying and sprint analytics.
+- Teammate comparison metrics.
 - Lap-by-lap and pit-stop analytics.
+- Real authentication provider credentials/configuration in the user's Supabase project.
 
 ## Documentation rule
 
