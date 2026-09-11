@@ -15,22 +15,11 @@ type ConstructorRecord = { constructorId: string; name: string; nationality?: st
 type CircuitRecord = { circuitId: string; circuitName: string; Location?: { locality?: string; country?: string } }
 type RaceRecord = { season: string; round: string; raceName: string; date?: string; Circuit: CircuitRecord }
 type ResultRecord = {
-  number?: string
-  position?: string
-  points?: string
-  grid?: string
-  status?: string
-  Driver: { driverId: string }
-  Constructor: { constructorId: string }
-  FastestLap?: { rank?: string; AverageSpeed?: { speed?: string }; Time?: { time?: string } }
+  position?: string; points?: string; grid?: string; status?: string
+  Driver: { driverId: string }; Constructor: { constructorId: string }
+  FastestLap?: { rank?: string; Time?: { time?: string } }
 }
-type DriverStandingRecord = {
-  position?: string
-  points?: string
-  wins?: string
-  Driver: { driverId: string }
-  Constructors?: { constructorId: string }[]
-}
+type DriverStandingRecord = { position?: string; points?: string; wins?: string; Driver: { driverId: string }; Constructors?: { constructorId: string }[] }
 type ConstructorStandingRecord = { position?: string; points?: string; wins?: string; Constructor: { constructorId: string } }
 
 const request = async <T extends JolpicaResponse>(resource: string, season: number, round?: number): Promise<T> => {
@@ -63,8 +52,8 @@ const numberOrNull = (value?: string) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
 }
-
 const numberOrZero = (value?: string) => numberOrNull(value) ?? 0
+const roundFrom = (payload: JolpicaResponse) => numberOrNull((payload.MRData?.StandingsTable as Record<string, unknown> | undefined)?.round as string | undefined)
 
 export const fetchVerifiedCatalog = async (season: number): Promise<MotorsportCatalog> => {
   const [driversPayload, constructorsPayload, circuitsPayload, racesPayload] = await Promise.all([
@@ -74,83 +63,32 @@ export const fetchVerifiedCatalog = async (season: number): Promise<MotorsportCa
   const driverRecords = readArray<DriverRecord>(driversPayload, 'DriverTable', 'Drivers')
   const circuitRecords = readArray<CircuitRecord>(circuitsPayload, 'CircuitTable', 'Circuits')
   const raceRecords = readArray<RaceRecord>(racesPayload, 'RaceTable', 'Races')
-
   const teams: Team[] = constructorRecords.map((team) => ({ id: team.constructorId, name: team.name, shortName: team.name, country: team.nationality ?? 'Unknown', status: 'verified' }))
-  const drivers: Driver[] = driverRecords.map((driver) => ({
-    id: driver.driverId,
-    fullName: `${driver.givenName} ${driver.familyName}`,
-    shortName: driver.code ?? driver.driverId.toUpperCase().slice(0, 3),
-    nationality: driver.nationality ?? 'Unknown',
-    number: driver.permanentNumber ? Number(driver.permanentNumber) : null,
-    teamId: null,
-    status: 'verified',
-  }))
+  const drivers: Driver[] = driverRecords.map((driver) => ({ id: driver.driverId, fullName: `${driver.givenName} ${driver.familyName}`, shortName: driver.code ?? driver.driverId.toUpperCase().slice(0, 3), nationality: driver.nationality ?? 'Unknown', number: driver.permanentNumber ? Number(driver.permanentNumber) : null, teamId: null, status: 'verified' }))
   const circuits: Circuit[] = circuitRecords.map((circuit) => ({ id: circuit.circuitId, name: circuit.circuitName, location: circuit.Location?.locality ?? 'Unknown', country: circuit.Location?.country ?? 'Unknown', laps: null, status: 'verified' }))
   const races: Race[] = raceRecords.map((race) => ({ id: `${race.season}-${race.round}-${race.Circuit.circuitId}`, season: Number(race.season), round: Number(race.round), name: race.raceName, circuitId: race.Circuit.circuitId, date: race.date ?? null, status: 'verified' }))
-
   if (!teams.length || !drivers.length || !circuits.length || !races.length) throw new Error('Verified F1 catalog is incomplete')
   return { season, teams, drivers, circuits, races }
 }
 
-export type VerifiedSeasonAnalytics = {
-  results: RaceResult[]
-  driverStandings: DriverStanding[]
-  constructorStandings: ConstructorStanding[]
+export type VerifiedSeasonAnalytics = { results: RaceResult[]; driverStandings: DriverStanding[]; constructorStandings: ConstructorStanding[] }
+
+export const fetchVerifiedSeasonStandings = async (season: number) => {
+  const [driverPayload, constructorPayload] = await Promise.all([request('driverstandings', season), request('constructorstandings', season)])
+  const driverStandings: DriverStanding[] = readStandings<DriverStandingRecord>(driverPayload, 'DriverStandings').map((standing) => ({ season, round: roundFrom(driverPayload), driverId: standing.Driver.driverId, teamIds: standing.Constructors?.map((constructor) => constructor.constructorId) ?? [], position: numberOrNull(standing.position), points: numberOrZero(standing.points), wins: numberOrZero(standing.wins), status: 'verified' }))
+  const constructorStandings: ConstructorStanding[] = readStandings<ConstructorStandingRecord>(constructorPayload, 'ConstructorStandings').map((standing) => ({ season, round: roundFrom(constructorPayload), teamId: standing.Constructor.constructorId, position: numberOrNull(standing.position), points: numberOrZero(standing.points), wins: numberOrZero(standing.wins), status: 'verified' }))
+  return { round: roundFrom(driverPayload), driverStandings, constructorStandings }
 }
 
 export const fetchVerifiedSeasonAnalytics = async (season: number, rounds: number[]): Promise<VerifiedSeasonAnalytics> => {
-  const [driverPayload, constructorPayload, ...resultPayloads] = await Promise.all([
-    request('driverstandings', season),
-    request('constructorstandings', season),
-    ...rounds.map((round) => request('results', season, round)),
-  ])
-
-  const driverStandings = readStandings<DriverStandingRecord>(driverPayload, 'DriverStandings').map((standing) => ({
-    season,
-    round: numberOrNull((driverPayload.MRData?.StandingsTable as Record<string, unknown> | undefined)?.round as string | undefined),
-    driverId: standing.Driver.driverId,
-    teamIds: standing.Constructors?.map((constructor) => constructor.constructorId) ?? [],
-    position: numberOrNull(standing.position),
-    points: numberOrZero(standing.points),
-    wins: numberOrZero(standing.wins),
-    status: 'verified' as const,
-  }))
-
-  const constructorStandings = readStandings<ConstructorStandingRecord>(constructorPayload, 'ConstructorStandings').map((standing) => ({
-    season,
-    round: numberOrNull((constructorPayload.MRData?.StandingsTable as Record<string, unknown> | undefined)?.round as string | undefined),
-    teamId: standing.Constructor.constructorId,
-    position: numberOrNull(standing.position),
-    points: numberOrZero(standing.points),
-    wins: numberOrZero(standing.wins),
-    status: 'verified' as const,
-  }))
-
+  const standings = await fetchVerifiedSeasonStandings(season)
+  const resultPayloads: JolpicaResponse[] = []
+  for (const round of rounds) resultPayloads.push(await request('results', season, round))
   const results: RaceResult[] = []
   for (let index = 0; index < resultPayloads.length; index += 1) {
     const round = rounds[index]
-    const records = readArray<ResultRecord>(resultPayloads[index], 'RaceTable', 'Races')
-    for (const race of records) {
-      const raceRecord = race as unknown as { season: string; round: string; Results?: ResultRecord[] }
-      for (const result of raceRecord.Results ?? []) {
-        results.push({
-          id: `${season}-${round}-${result.Driver.driverId}`,
-          season,
-          round,
-          raceId: `${season}-${round}`,
-          driverId: result.Driver.driverId,
-          teamId: result.Constructor.constructorId,
-          grid: numberOrNull(result.grid),
-          position: numberOrNull(result.position),
-          points: numberOrZero(result.points),
-          status: result.status ?? 'Unknown',
-          fastestLapRank: numberOrNull(result.FastestLap?.rank),
-          fastestLapTime: result.FastestLap?.Time?.time ?? null,
-          statusCode: 'verified',
-        })
-      }
-    }
+    const records = readArray<{ season: string; round: string; Results?: ResultRecord[] }>(resultPayloads[index], 'RaceTable', 'Races')
+    for (const race of records) for (const result of race.Results ?? []) results.push({ id: `${season}-${round}-${result.Driver.driverId}`, season, round, raceId: `${season}-${round}`, driverId: result.Driver.driverId, teamId: result.Constructor.constructorId, grid: numberOrNull(result.grid), position: numberOrNull(result.position), points: numberOrZero(result.points), status: result.status ?? 'Unknown', fastestLapRank: numberOrNull(result.FastestLap?.rank), fastestLapTime: result.FastestLap?.Time?.time ?? null, statusCode: 'verified' })
   }
-
-  return { results, driverStandings, constructorStandings }
+  return { results, ...standings }
 }
