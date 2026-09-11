@@ -55,7 +55,6 @@ This file records meaningful project decisions and implementation steps so the p
 ### Deliberately not implemented yet
 
 - Real authentication provider credentials/configuration in the user's Supabase project.
-- Real motorsport API integration.
 - Production database deployment/migration execution.
 - Automated browser security tests.
 - MFA enrollment UX.
@@ -96,15 +95,39 @@ This file records meaningful project decisions and implementation steps so the p
 
 ### Data architecture decision
 
-The UI consumes a repository contract rather than importing an API client directly. The next verified ingestion source can therefore replace the preview adapter without redesigning the Explore screens. This follows the project's separation between ingestion, normalization, domain data and presentation.
+The UI consumes a repository contract rather than importing an API client directly. The verified ingestion source can therefore replace the preview adapter without redesigning the Explore screens. This follows the project's separation between ingestion, normalization, domain data and presentation.
+
+## 2026-09-11 — Verified F1 catalog ingestion
+
+### Implemented
+
+- Selected Jolpica F1 as the first Formula 1 upstream catalog source after checking its current documentation and terms.
+- Added a server-side Netlify Function at `/api/f1` rather than exposing the upstream API directly from the browser.
+- Restricted the proxy to `GET` and an explicit allowlist of drivers, constructors, circuits and races.
+- Added an identifying `RaceMetrics/0.1.0` User-Agent for upstream requests.
+- Added response caching headers to reduce unnecessary upstream traffic.
+- Added a typed normalization adapter that converts Jolpica responses into the RaceMetrics domain model.
+- Switched the repository to the verified adapter with a preview fallback for upstream outages.
+- Updated Explore to distinguish verified upstream data from preview data.
+- Changed `Driver.teamId` to nullable instead of inventing a driver-to-team relationship that the current driver catalog endpoint does not establish.
+- Added `docs/DATA-SOURCES.md` with source, architecture, licensing and fallback notes.
+
+### Data integrity rules
+
+- No official championship points are synthesized from the catalog endpoint.
+- No driver-team relationship is inferred without source evidence.
+- Unknown circuit lap counts remain null.
+- Preview fixtures remain explicitly fictional.
+- Upstream failure produces a labeled preview state rather than fabricated live data.
 
 ### Deliberately not implemented yet
 
-- Verified live motorsport ingestion.
-- Official 2026 championship values.
-- Persistent favorite actions from Explore.
+- Race result ingestion and standings normalization.
+- Driver-to-constructor relationships from results/standings.
 - Driver/team/race/circuit detail pages.
+- Persistent favorite actions from Explore.
 - Automated browser tests.
+- Production deployment verification of the Netlify Function.
 
 ## Documentation rule
 
