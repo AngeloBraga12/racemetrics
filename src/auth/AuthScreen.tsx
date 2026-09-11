@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, CheckCircle2, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
 import { useAuth } from './AuthProvider'
+import { supabase } from '../lib/supabase'
 
 type Mode = 'login' | 'signup' | 'recovery' | 'reset'
 
@@ -21,9 +22,22 @@ export function AuthScreen() {
   const [message, setMessage] = useState('')
   const [success, setSuccess] = useState(false)
 
+  useEffect(() => {
+    if (!supabase) return
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('reset')
+        setPassword('')
+        setMessage('Escolha uma nova senha para sua conta.')
+        setSuccess(true)
+      }
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
   const current = copy[mode]
 
-  async function submit(event: React.FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
     setMessage('')
@@ -69,14 +83,10 @@ export function AuthScreen() {
           <p>Uma conta por pessoa. Seus favoritos, comparações e preferências ficam isolados da conta de qualquer outro usuário.</p>
         </div>
 
-        <div className="provider-grid">
-          {mode !== 'reset' && (
-            <>
-              <button className="provider-button" disabled={busy} onClick={() => auth.signInWithProvider('google')}>G <span>Google</span></button>
-              <button className="provider-button" disabled={busy} onClick={() => auth.signInWithProvider('azure')}>M <span>Microsoft</span></button>
-            </>
-          )}
-        </div>
+        {mode !== 'reset' && <div className="provider-grid">
+          <button type="button" className="provider-button" disabled={busy} onClick={() => void auth.signInWithProvider('google')}>G <span>Google</span></button>
+          <button type="button" className="provider-button" disabled={busy} onClick={() => void auth.signInWithProvider('azure')}>M <span>Microsoft</span></button>
+        </div>}
 
         {mode !== 'reset' && <div className="auth-divider"><span>ou continue com e-mail</span></div>}
 
