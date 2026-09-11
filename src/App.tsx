@@ -5,11 +5,13 @@ import {
   CircleUserRound,
   Flag,
   Gauge,
+  LogOut,
   Search,
   ShieldCheck,
   Trophy,
   Users,
 } from 'lucide-react'
+import { useAuth } from './auth/AuthProvider'
 
 type Driver = {
   position: number
@@ -40,6 +42,9 @@ const sectors = [
 ]
 
 function App() {
+  const { user, signOut } = useAuth()
+  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Account'
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -57,7 +62,8 @@ function App() {
 
         <div className="topbar-actions">
           <button className="icon-button" aria-label="Pesquisar"><Search size={18} /></button>
-          <button className="profile-button"><CircleUserRound size={18} /> Entrar</button>
+          <button className="profile-button" title={user?.email ?? 'Conta'}><CircleUserRound size={18} /><span>{displayName}</span></button>
+          <button className="icon-button" aria-label="Sair" onClick={() => void signOut()}><LogOut size={17} /></button>
         </div>
       </header>
 
