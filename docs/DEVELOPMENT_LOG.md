@@ -25,17 +25,22 @@ This file records meaningful project decisions and implementation steps so the p
 - Security requirements.
 - Roadmap.
 - Design and anti-generic rules.
+- Supabase client boundary using environment variables only.
+- Typed authentication service for password auth, Google, Microsoft/Azure, recovery and sign-out.
+- Initial private user-data schema with RLS for profiles, preferences, favorites and saved comparisons.
+- New-user profile trigger.
+- `.env.example` with required public frontend configuration.
 
-### Deliberately not implemented yet
+### Security notes
 
-- Real authentication.
-- Real user data.
-- Real motorsport API integration.
-- Production database.
-- OAuth credentials.
-- Security-sensitive infrastructure.
+- The browser receives only Supabase's public/publishable key. A service-role key must never be shipped to the frontend.
+- Row Level Security is treated as the authorization boundary for user-owned database records.
+- OAuth redirect destinations are constrained to application-owned auth routes in code. Provider-side allowlists still have to be configured in Supabase.
+- No production authentication is claimed until a real Supabase project is connected and the security matrix passes.
 
-These are intentionally deferred until the application boundaries and test strategy are established.
+### External configuration still required
+
+The remaining infrastructure step is project-owned Supabase configuration: project URL, publishable key, email provider behavior, and Google/Microsoft OAuth provider setup. These values must come from the project's Supabase dashboard and must not be fabricated or committed.
 
 ## Documentation rule
 
