@@ -25,22 +25,42 @@ This file records meaningful project decisions and implementation steps so the p
 - Security requirements.
 - Roadmap.
 - Design and anti-generic rules.
-- Supabase client boundary using environment variables only.
-- Typed authentication service for password auth, Google, Microsoft/Azure, recovery and sign-out.
-- Initial private user-data schema with RLS for profiles, preferences, favorites and saved comparisons.
-- New-user profile trigger.
-- `.env.example` with required public frontend configuration.
+
+## 2026-09-11 — Authentication UX foundation
+
+### Implemented
+
+- Supabase browser client using only public runtime configuration.
+- Persistent session restoration and auth-state subscription.
+- Protected application shell: unauthenticated users do not receive the dashboard.
+- Email/password sign-in.
+- Account creation with display-name metadata.
+- Google OAuth entry point.
+- Microsoft/Azure OAuth entry point.
+- Password recovery request flow.
+- Password recovery callback state and password update UI.
+- Generic client-facing authentication errors to reduce unnecessary information disclosure.
+- Explicit setup state when Supabase environment variables are absent.
+- Account identity display and sign-out control in the dashboard.
+- Responsive authentication interface aligned with RaceMetrics visual rules.
+- No service-role/admin credential exposed to browser code.
 
 ### Security notes
 
-- The browser receives only Supabase's public/publishable key. A service-role key must never be shipped to the frontend.
-- Row Level Security is treated as the authorization boundary for user-owned database records.
-- OAuth redirect destinations are constrained to application-owned auth routes in code. Provider-side allowlists still have to be configured in Supabase.
-- No production authentication is claimed until a real Supabase project is connected and the security matrix passes.
+- OAuth redirects use the current application origin and must still be allowlisted in the Supabase project configuration.
+- The frontend session gate is a UX boundary, not the authorization boundary. Database RLS remains authoritative for private data.
+- Real provider credentials are intentionally not committed.
+- Password recovery responses are intentionally phrased without confirming whether an account exists.
 
-### External configuration still required
+### Deliberately not implemented yet
 
-The remaining infrastructure step is project-owned Supabase configuration: project URL, publishable key, email provider behavior, and Google/Microsoft OAuth provider setup. These values must come from the project's Supabase dashboard and must not be fabricated or committed.
+- Real authentication provider credentials/configuration in the user's Supabase project.
+- Real motorsport API integration.
+- Production database deployment/migration execution.
+- Automated browser security tests.
+- MFA enrollment UX.
+
+These require external project configuration or a later security-testing stage and must not be faked.
 
 ## Documentation rule
 
