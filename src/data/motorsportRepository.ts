@@ -1,17 +1,33 @@
-import type { EntityKind, MotorsportCatalog } from '../types/domain'
+import type {
+  ConstructorStanding,
+  DriverStanding,
+  EntityKind,
+  MotorsportCatalog,
+  RaceResult,
+} from '../types/domain'
 import { previewCatalog } from './catalog'
 import { fetchVerifiedCatalog } from './jolpicaRepository'
+import { buildVerifiedSeasonData } from './jolpicaResultsRepository'
 
 export type CatalogFilter = { query?: string; kind?: EntityKind | 'all' }
 export type SearchResult = { kind: EntityKind; id: string; label: string; meta: string }
 
+export type VerifiedSeasonData = {
+  catalog: MotorsportCatalog
+  results: RaceResult[]
+  driverStandings: DriverStanding[]
+  constructorStandings: ConstructorStanding[]
+}
+
 export type MotorsportRepository = {
   getCatalog: () => Promise<MotorsportCatalog>
+  getSeasonData: () => Promise<VerifiedSeasonData | null>
   search: (filter: CatalogFilter) => Promise<SearchResult[]>
 }
 
 const normalize = (value: string) => value.trim().toLocaleLowerCase('pt-BR')
 let catalogPromise: Promise<MotorsportCatalog> | null = null
+let seasonDataPromise: Promise<VerifiedSeasonData | null> | null = null
 
 const getCatalog = () => {
   if (!catalogPromise) {
@@ -20,8 +36,18 @@ const getCatalog = () => {
   return catalogPromise
 }
 
+const getSeasonData = async (): Promise<VerifiedSeasonData | null> => {
+  if (!seasonDataPromise) {
+    seasonDataPromise = fetchVerifiedCatalog(2026)
+      .then(buildVerifiedSeasonData)
+      .catch(() => null)
+  }
+  return seasonDataPromise
+}
+
 export const motorsportRepository: MotorsportRepository = {
   getCatalog,
+  getSeasonData,
   async search({ query = '', kind = 'all' }) {
     const catalog = await getCatalog()
     const needle = normalize(query)
