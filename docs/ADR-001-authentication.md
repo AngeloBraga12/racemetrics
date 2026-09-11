@@ -14,7 +14,7 @@ Building authentication primitives from scratch would increase the attack surfac
 
 Use **Supabase Auth** as the identity foundation and **Postgres with Row Level Security (RLS)** for user-owned application data.
 
-Supabase Auth currently supports password authentication and social login, and integrates its authenticated JWT identity with Postgres RLS for row-level authorization. Google and Microsoft/Azure providers are supported. citeturn0search0turn0search3turn0search9
+Supabase Auth supports password authentication and social login, and integrates authenticated identities with Postgres RLS for row-level authorization. Google and Microsoft/Azure providers are supported.
 
 ## Security posture
 
@@ -33,7 +33,7 @@ Planned controls include:
 - tests attempting cross-user reads and writes
 - security notifications where supported
 
-Supabase documents protections for password storage, recovery flows and session controls, including bcrypt password hashing, anti-enumeration behavior for password reset and configurable session lifetime controls. citeturn0search1turn0search2turn0search8
+Supabase documents password hashing, anti-enumeration behavior for password reset and configurable session lifetime controls. These capabilities will be configured deliberately rather than accepted blindly at their defaults.
 
 ## Consequences
 
@@ -58,4 +58,4 @@ This decision does not mean every future backend feature must use Supabase Edge 
 
 ## Source note
 
-Provider capabilities and security behavior were checked against the current Supabase documentation before recording this decision.
+Provider capabilities and security behavior were checked against current Supabase documentation before recording this decision.
