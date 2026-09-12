@@ -1,68 +1,69 @@
 # RaceMetrics
 
-RaceMetrics is a private, authenticated motorsport analytics workspace built to explore seasons, compare performance and turn race results into defensible insights.
+Workspace de análise de automobilismo criado para transformar dados de corridas em comparações e insights estruturados.
 
-The goal is not to build another generic dashboard. The interface is deliberately shaped around motorsport concepts such as classification, gaps, laps, sectors, stints, qualifying and race pace.
+O produto foi concebido para tratar automobilismo como domínio de negócio, e não como apenas mais um dashboard genérico. A interface considera classificação, gaps, voltas, setores, stints, qualifying e ritmo de corrida.
 
-## Product model
+## Produto
 
-Each person has an individual account. User-owned information is private and isolated by server-side authorization.
-
-Planned authentication methods:
-
-- Email + password
-- Google
-- Microsoft
-
-Main product areas:
+Áreas principais:
 
 - Dashboard
 - Explore
 - Compare
 - Analytics
 
-Planned advanced features:
+Evoluções planejadas:
 
-- Driver and team profiles
+- Perfis de pilotos e equipes
 - Circuit Explorer
 - Race Insights
-- Favorites and saved comparisons
+- Favoritos e comparações salvas
 - Race Replay
 - What If?
 - AI Race Analyst
 
-## Engineering principles
+## Arquitetura e segurança
 
-- TypeScript strict
-- Small, domain-oriented components
-- Motorsport data separated from presentation
-- Authentication separated from business rules
-- Server-side authorization for every private resource
-- Strong input validation
-- Security tests for critical flows
-- Accessibility and responsive behavior as release requirements
-- CI validation before merge
-- No fabricated data presented as official or live data
+- TypeScript strict.
+- Componentes orientados ao domínio.
+- Dados de automobilismo separados da apresentação.
+- Autenticação isolada das regras de negócio.
+- Autorização server-side para recursos privados.
+- Validação de entrada.
+- Testes de segurança para fluxos críticos.
+- Acessibilidade e responsividade como requisitos de release.
+- CI antes de merge.
+- Nenhum dado fictício é apresentado como resultado oficial ou dado ao vivo.
 
-## Anti-generic design rule
+## Direção visual
 
-The product must not resemble an AI-generated template. We avoid repetitive card grids, decorative gradients, meaningless charts and fake statistics. Visual patterns must have a reason in the information architecture of a motorsport analysis tool.
+O projeto evita o padrão de dashboard genérico produzido por geradores: excesso de cards, gradientes decorativos, gráficos sem propósito e métricas inventadas não fazem parte do produto.
 
-See `docs/DESIGN.md` for the visual rules.
+Consulte `docs/DESIGN.md` para as regras visuais.
 
-## Documentation
+## Documentação
 
-- `docs/ARCHITECTURE.md` — system boundaries and data flow
-- `docs/SECURITY.md` — authentication, authorization and security gates
-- `docs/DESIGN.md` — visual language and anti-generic rules
-- `docs/ROADMAP.md` — product and engineering roadmap
-- `docs/DEVELOPMENT_LOG.md` — decisions and implementation history
-- `CONTRIBUTING.md` — quality and contribution rules
+- `docs/ARCHITECTURE.md` — limites e fluxo do sistema
+- `docs/SECURITY.md` — autenticação e segurança
+- `docs/DESIGN.md` — linguagem visual
+- `docs/ROADMAP.md` — roadmap
+- `docs/DEVELOPMENT_LOG.md` — histórico técnico
+- `CONTRIBUTING.md` — padrões de contribuição
 
-## Current status
+## Status
 
 **v0.1 · Foundation**
 
-The current release establishes the initial React + TypeScript + Vite application, the dashboard shell and the motorsport-specific visual direction. Displayed values are interface placeholders and are not official race results.
+A base atual estabelece a aplicação React + TypeScript + Vite, o shell do dashboard e a direção visual específica de automobilismo. Os valores exibidos nesta etapa são placeholders de interface e não representam resultados oficiais.
 
-Authentication, real data, backend infrastructure and production security are intentionally implemented in later phases after the boundaries and testing strategy are established.
+As etapas seguintes incluem autenticação, dados reais, backend, banco de dados e hardening de produção.
+
+## Autor
+
+**Angelo Braga**  
+Desenvolvedor Web / Front-end · Técnico em Informática
+
+- GitHub: https://github.com/AngeloBraga12
+- Portfólio: https://portifolio-angelobraga.netlify.app/
+- LinkedIn: https://www.linkedin.com/in/angelo-braga-5747b4192/
