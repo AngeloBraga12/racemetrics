@@ -151,6 +151,22 @@ The UI consumes a repository contract rather than importing an API client direct
 
 The first CI run failed before dependency installation because `actions/setup-node` was configured with `cache: npm` while the repository had no lockfile. The workflow was corrected to remove the lockfile-dependent cache setting. This is an infrastructure fix, not a suppression of the build gate.
 
+## 2026-09-12 — Driver comparison vertical slice
+
+### Implemented
+
+- Added a dedicated Compare view for verified 2026 driver-versus-driver analysis.
+- Added driver selectors populated only from drivers present in the verified championship standings.
+- Added comparison of championship position, points and wins.
+- Added explicit provenance text describing the supported metric boundary.
+- Added loading and unavailable states instead of substituting preview numbers.
+- Connected Compare to the primary navigation.
+- Kept the comparison visual system data-dense and motorsport-specific rather than using generic AI dashboard patterns.
+
+### CI typing repair
+
+The first post-Analytics CI build reached TypeScript compilation and exposed missing React type packages and Vite `import.meta.env` declarations. Added `@types/react`, `@types/react-dom` and the standard Vite client declaration so the build can type-check JSX and runtime environment access correctly.
+
 ### Deliberately not implemented yet
 
 - Driver/team/race/circuit detail pages.
