@@ -3,6 +3,7 @@ import { Activity, BarChart3, ChevronRight, CircleUserRound, Flag, Gauge, LogOut
 import { useAuth } from './auth/AuthProvider'
 import { Explore } from './features/explore/Explore'
 import { Analytics } from './features/analytics/Analytics'
+import { Compare } from './features/compare/Compare'
 import { previewCatalog } from './data/catalog'
 
 const stats = [
@@ -24,11 +25,11 @@ function Dashboard() {
 
 function App() {
   const { user, signOut } = useAuth()
-  const [view, setView] = useState<'dashboard' | 'explore' | 'analytics'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'explore' | 'compare' | 'analytics'>('dashboard')
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Account'
-  const navigate = (next: 'dashboard' | 'explore' | 'analytics') => { setView(next); window.location.hash = next }
-  const currentView = view === 'dashboard' ? <Dashboard /> : view === 'explore' ? <Explore /> : <Analytics />
-  return <div className="app-shell"><header className="topbar"><button className="brand brand-button" onClick={() => navigate('dashboard')} aria-label="RaceMetrics início"><span className="brand-mark">RM</span><span>RaceMetrics</span></button><nav className="nav" aria-label="Navegação principal"><button className={view === 'dashboard' ? 'active' : ''} onClick={() => navigate('dashboard')}>Dashboard</button><button className={view === 'explore' ? 'active' : ''} onClick={() => navigate('explore')}>Explore</button><button onClick={() => { window.location.hash = 'compare' }}>Compare</button><button className={view === 'analytics' ? 'active' : ''} onClick={() => navigate('analytics')}>Analytics</button></nav><div className="topbar-actions"><button className="icon-button" aria-label="Pesquisar" onClick={() => navigate('explore')}><Search size={18} /></button><button className="profile-button" title={user?.email ?? 'Conta'}><CircleUserRound size={18} /><span>{displayName}</span></button><button className="icon-button" aria-label="Sair" onClick={() => void signOut()}><LogOut size={17} /></button></div></header>{currentView}</div>
+  const navigate = (next: 'dashboard' | 'explore' | 'compare' | 'analytics') => { setView(next); window.location.hash = next }
+  const currentView = view === 'dashboard' ? <Dashboard /> : view === 'explore' ? <Explore /> : view === 'compare' ? <Compare /> : <Analytics />
+  return <div className="app-shell"><header className="topbar"><button className="brand brand-button" onClick={() => navigate('dashboard')} aria-label="RaceMetrics início"><span className="brand-mark">RM</span><span>RaceMetrics</span></button><nav className="nav" aria-label="Navegação principal"><button className={view === 'dashboard' ? 'active' : ''} onClick={() => navigate('dashboard')}>Dashboard</button><button className={view === 'explore' ? 'active' : ''} onClick={() => navigate('explore')}>Explore</button><button className={view === 'compare' ? 'active' : ''} onClick={() => navigate('compare')}>Compare</button><button className={view === 'analytics' ? 'active' : ''} onClick={() => navigate('analytics')}>Analytics</button></nav><div className="topbar-actions"><button className="icon-button" aria-label="Pesquisar" onClick={() => navigate('explore')}><Search size={18} /></button><button className="profile-button" title={user?.email ?? 'Conta'}><CircleUserRound size={18} /><span>{displayName}</span></button><button className="icon-button" aria-label="Sair" onClick={() => void signOut()}><LogOut size={17} /></button></div></header>{currentView}</div>
 }
 
 export default App
