@@ -167,6 +167,30 @@ The first CI run failed before dependency installation because `actions/setup-no
 
 The first post-Analytics CI build reached TypeScript compilation and exposed missing React type packages and Vite `import.meta.env` declarations. Added `@types/react`, `@types/react-dom` and the standard Vite client declaration so the build can type-check JSX and runtime environment access correctly.
 
+## 2026-09-12 — Security hardening pass
+
+### Audit performed
+
+- Reviewed the protected application bootstrap and confirmed unauthenticated users are not rendered the application shell.
+- Reviewed Supabase client configuration and confirmed only the publishable browser key is referenced.
+- Reviewed password recovery messaging for account-enumeration leakage.
+- Reviewed the private-data migration and confirmed ownership is enforced through PostgreSQL RLS for profiles, preferences, favorites and saved comparisons.
+- Reviewed the public F1 proxy for method, resource, season, round, limit and offset validation.
+- Searched the repository for obvious TODO/FIXME markers, client-side service-role credentials, unsafe HTML sinks and accidental debug logging. No matches were found in the checked source index.
+- Added baseline browser security headers including CSP, HSTS, frame denial, MIME sniffing protection, referrer policy and restrictive permissions policy.
+- Hardened API error responses to avoid reflecting upstream status details unnecessarily.
+
+### Security limitations that remain release blockers
+
+- Real Supabase project configuration has not been exercised in this environment, so provider callbacks and production auth behavior require external verification.
+- Cross-account RLS tests require two real authenticated Supabase users and therefore cannot be honestly marked passed without project credentials/configuration.
+- Automated browser security tests are not yet installed.
+- The public F1 proxy has caching and bounded inputs but does not yet have application-level per-client rate limiting.
+- Production Netlify headers and function behavior still require deployment-level verification.
+- MFA is not yet implemented.
+
+No security limitation is being represented as solved merely because the UI appears to work.
+
 ### Deliberately not implemented yet
 
 - Driver/team/race/circuit detail pages.
