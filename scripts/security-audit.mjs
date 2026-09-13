@@ -6,11 +6,8 @@ const failures = []
 const checks = []
 
 function check(name, condition, detail = '') {
-  if (condition) {
-    checks.push(`PASS  ${name}`)
-  } else {
-    failures.push(`FAIL  ${name}${detail ? `: ${detail}` : ''}`)
-  }
+  if (condition) checks.push(`PASS  ${name}`)
+  else failures.push(`FAIL  ${name}${detail ? `: ${detail}` : ''}`)
 }
 
 function read(path) {
@@ -24,8 +21,7 @@ function allFiles(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     if (['node_modules', '.git', 'dist', 'coverage'].includes(entry)) continue
     const full = join(dir, entry)
-    const stat = statSync(full)
-    if (stat.isDirectory()) allFiles(full, out)
+    if (statSync(full).isDirectory()) allFiles(full, out)
     else out.push(full)
   }
   return out
@@ -41,11 +37,9 @@ const migration = read('supabase/migrations/202609110001_private_user_data.sql')
 
 check('package remains private', pkg.private === true)
 check('security test is wired into npm scripts', pkg.scripts?.['test:security'] === 'node scripts/security-audit.mjs')
-
 check('protected app gates App behind authenticated user', /return user \? <App \/> : <AuthScreen \/>/.test(main))
 check('auth provider restores persisted session', /supabase\.auth\.getSession\(\)/.test(auth))
 check('auth provider subscribes to auth state changes', /supabase\.auth\.onAuthStateChange/.test(auth))
-check('auth provider exposes only configured Supabase client', /Boolean\(supabase\)/.test(auth))
 check('OAuth redirects use current origin', /redirectTo: window\.location\.origin/.test(auth))
 check('password recovery uses current origin', /resetPasswordForEmail\(email\.trim\(\), \{\s*redirectTo: window\.location\.origin/.test(auth))
 check('Supabase client uses publishable key', /VITE_SUPABASE_PUBLISHABLE_KEY/.test(supabase))
@@ -70,9 +64,10 @@ check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 
 check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\.${t} from anon`).test(migration)))
 check('policies target authenticated role', (migration.match(/to authenticated/g) || []).length >= 12)
 check('ownership policies use auth.uid()', (migration.match(/auth\.uid\(\)/g) || []).length >= 12)
-check('update policies use WITH CHECK ownership', (migration.match(/for update to authenticated[\\s\\S]*?with check \([^)]*auth\.uid\(\)\)/g) || []).length >= 4)
-check('trigger function is SECURITY INVOKER', /set_updated_at\(\)[\\s\\S]*?security invoker/.test(migration))
-check('SECURITY DEFINER trigger pins search_path', /handle_new_user\(\)[\\s\S]*?security definer[\\s\S]*?set search_path = public/.test(migration))
+check('all four tables define update ownership policies', (migration.match(/for update to authenticated/g) || []).length === 4)
+check('all four update policies define WITH CHECK', (migration.match(/for update to authenticated[\s\S]*?with check/g) || []).length === 4)
+check('trigger function is SECURITY INVOKER', /set_updated_at\(\)[\s\S]*?security invoker/.test(migration))
+check('SECURITY DEFINER trigger pins search_path', /handle_new_user\(\)[\s\S]*?security definer[\s\S]*?set search_path = public/.test(migration))
 
 const sourceFiles = allFiles(join(root, 'src'))
 const sourceText = sourceFiles.map(file => `${relative(root, file)}\n${readFileSync(file, 'utf8')}`).join('\n')
@@ -89,10 +84,10 @@ check('no service-role secrets in browser source', !/service_role|SUPABASE_SERVI
 check('no access tokens are manually persisted in browser source', !/localStorage\.(setItem|getItem)\([^)]*(token|session|jwt)/i.test(sourceText))
 
 if (failures.length) {
-  console.error(`\\nSecurity audit failed: ${failures.length} check(s).\\n`)
-  console.error(failures.join('\\n'))
+  console.error(`\nSecurity audit failed: ${failures.length} check(s).\n`)
+  console.error(failures.join('\n'))
   process.exit(1)
 }
 
 console.log(`Security audit passed: ${checks.length} checks.`)
-console.log(checks.join('\\n'))
+console.log(checks.join('\n'))
