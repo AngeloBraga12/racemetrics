@@ -140,7 +140,8 @@ drop policy if exists "favorites_insert_own" on public.favorites;
 create policy "favorites_insert_own" on public.favorites
 for insert to authenticated with check (user_id = (select auth.uid()));
 
-drop policy if exists "favorites_update_own" on public.favorites
+drop policy if exists "favorites_update_own" on public.favorites;
+create policy "favorites_update_own" on public.favorites
 for update to authenticated
 using (user_id = (select auth.uid()))
 with check (user_id = (select auth.uid()));
