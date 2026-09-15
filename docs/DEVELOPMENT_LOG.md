@@ -185,7 +185,6 @@ The first post-Analytics CI build reached TypeScript compilation and exposed mis
 - Real Supabase project configuration has not been exercised in this environment, so provider callbacks and production auth behavior require external verification.
 - Cross-account RLS tests require two real authenticated Supabase users and therefore cannot be honestly marked passed without project credentials/configuration.
 - Automated browser security tests are not yet installed.
-- The public F1 proxy has caching and bounded inputs but does not yet have application-level per-client rate limiting.
 - Production Netlify headers and function behavior still require deployment-level verification.
 - MFA is not yet implemented.
 
@@ -201,6 +200,24 @@ No security limitation is being represented as solved merely because the UI appe
 - Teammate comparison metrics.
 - Lap-by-lap and pit-stop analytics.
 - Real authentication provider credentials/configuration in the user's Supabase project.
+
+## 2026-09-15 — F1 proxy resource hardening and CI verification
+
+### Implemented
+
+- Added a 2 MB upper bound for accepted upstream F1 response bodies before they can be forwarded by the proxy.
+- Added Netlify-native per-IP/domain rate limiting to `/api/f1`, configured at 60 requests per 60-second window.
+- Extended the static security audit to verify both the response-size cap and the Netlify rate-limit configuration.
+- Updated GitHub Actions to current `actions/checkout@v7` and `actions/setup-node@v7` major versions.
+- Kept Node.js 22 as the CI runtime and retained dependency and production-build gates.
+
+### CI verification
+
+GitHub Actions run 84 for commit `55e03a259dca84c5e4794c17900fd9cbccb60dc4` completed successfully. The pipeline installed dependencies with zero reported vulnerabilities, passed `npm audit --audit-level=high`, passed all 55 static security checks, and completed the TypeScript/Vite production build.
+
+### Verification boundary
+
+The CI result verifies repository-level compilation and static security invariants. It does not substitute for production Netlify behavior, real Supabase provider configuration, authenticated cross-account RLS tests, or browser-level security testing.
 
 ## Documentation rule
 
