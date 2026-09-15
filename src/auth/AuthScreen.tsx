@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, CheckCircle2, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
 import { useAuth } from './AuthProvider'
-import { supabase } from '../lib/supabase'
 
 type Mode = 'login' | 'signup' | 'recovery' | 'reset'
 
@@ -23,17 +22,12 @@ export function AuthScreen() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (!supabase) return
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setMode('reset')
-        setPassword('')
-        setMessage('Escolha uma nova senha para sua conta.')
-        setSuccess(true)
-      }
-    })
-    return () => data.subscription.unsubscribe()
-  }, [])
+    if (!auth.passwordRecovery) return
+    setMode('reset')
+    setPassword('')
+    setMessage('Escolha uma nova senha para sua conta.')
+    setSuccess(true)
+  }, [auth.passwordRecovery])
 
   const current = copy[mode]
 
@@ -91,9 +85,9 @@ export function AuthScreen() {
         {mode !== 'reset' && <div className="auth-divider"><span>ou continue com e-mail</span></div>}
 
         <form onSubmit={submit} className="auth-form">
-          {mode === 'signup' && <label>Nome<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required /></label>}
-          {mode !== 'reset' && <label>E-mail<div className="input-wrap"><Mail size={16} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required /></div></label>}
-          {mode !== 'recovery' && <label>Senha<div className="input-wrap"><LockKeyhole size={16} /><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required /></div></label>}
+          {mode === 'signup' && <label>Nome<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={80} required /></label>}
+          {mode !== 'reset' && <label>E-mail<div className="input-wrap"><Mail size={16} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={254} required /></div></label>}
+          {mode !== 'recovery' && <label>Senha<div className="input-wrap"><LockKeyhole size={16} /><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} maxLength={128} required /></div></label>}
           {mode === 'signup' && <small className="form-hint">Use uma senha forte com pelo menos 8 caracteres. O requisito final também depende da política configurada no provedor.</small>}
 
           {mode === 'login' && <button type="button" className="text-button" onClick={() => { setMode('recovery'); setMessage(''); setSuccess(false) }}>Esqueci minha senha</button>}
