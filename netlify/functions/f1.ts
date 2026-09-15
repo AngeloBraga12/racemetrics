@@ -82,4 +82,9 @@ export default async (request: Request, _context: Context) => {
 export const config: Config = {
   path: '/api/f1',
   method: ['GET'],
+  rateLimit: {
+    windowLimit: 60,
+    windowSize: 60,
+    aggregateBy: ['ip', 'domain'],
+  },
 }
