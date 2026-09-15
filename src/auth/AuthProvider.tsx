@@ -7,6 +7,7 @@ type AuthContextValue = {
   user: User | null
   loading: boolean
   configured: boolean
+  passwordRecovery: boolean
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, name: string) => Promise<string | null>
   signInWithProvider: (provider: 'google' | 'azure') => Promise<string | null>
@@ -18,6 +19,10 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 const genericAuthError = 'Não foi possível concluir a operação. Verifique os dados e tente novamente.'
+const MIN_PASSWORD_LENGTH = 8
+const MAX_PASSWORD_LENGTH = 128
+const MAX_EMAIL_LENGTH = 254
+const MAX_NAME_LENGTH = 80
 
 function authMessage(error: unknown) {
   if (!error || typeof error !== 'object' || !('message' in error)) return genericAuthError
@@ -29,9 +34,27 @@ function authMessage(error: unknown) {
   return genericAuthError
 }
 
+function validateEmail(email: string) {
+  const value = email.trim()
+  if (!value || value.length > MAX_EMAIL_LENGTH || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Informe um e-mail válido.'
+  return null
+}
+
+function validatePassword(password: string) {
+  if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) return `A senha deve ter entre ${MIN_PASSWORD_LENGTH} e ${MAX_PASSWORD_LENGTH} caracteres.`
+  return null
+}
+
+function validateName(name: string) {
+  const value = name.trim()
+  if (!value || value.length > MAX_NAME_LENGTH) return `O nome deve ter entre 1 e ${MAX_NAME_LENGTH} caracteres.`
+  return null
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
 
   useEffect(() => {
     if (!supabase) {
@@ -48,8 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (mounted) setSession(nextSession)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!mounted) return
+      setSession(nextSession)
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+      if (event === 'SIGNED_OUT') setPasswordRecovery(false)
     })
 
     return () => {
@@ -63,13 +89,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     loading,
     configured: Boolean(supabase),
+    passwordRecovery,
     async signIn(email, password) {
       if (!supabase) return 'O ambiente de autenticação ainda não foi configurado.'
+      const emailError = validateEmail(email)
+      if (emailError) return emailError
+      if (!password) return 'Informe sua senha.'
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
       return error ? authMessage(error) : null
     },
     async signUp(email, password, name) {
       if (!supabase) return 'O ambiente de autenticação ainda não foi configurado.'
+      const emailError = validateEmail(email)
+      if (emailError) return emailError
+      const passwordError = validatePassword(password)
+      if (passwordError) return passwordError
+      const nameError = validateName(name)
+      if (nameError) return nameError
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -90,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     async requestPasswordReset(email) {
       if (!supabase) return 'O ambiente de autenticação ainda não foi configurado.'
+      const emailError = validateEmail(email)
+      if (emailError) return emailError
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: window.location.origin,
       })
@@ -97,7 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     async updatePassword(password) {
       if (!supabase) return 'O ambiente de autenticação ainda não foi configurado.'
+      const passwordError = validatePassword(password)
+      if (passwordError) return passwordError
       const { error } = await supabase.auth.updateUser({ password })
+      if (!error) setPasswordRecovery(false)
       return error ? authMessage(error) : null
     },
     async signOut() {
@@ -105,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut()
       return error ? authMessage(error) : null
     },
-  }), [loading, session])
+  }), [loading, passwordRecovery, session])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
