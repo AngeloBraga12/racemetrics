@@ -67,6 +67,7 @@ check('F1 proxy caps offset', /Number\(offset\) > MAX_OFFSET/.test(proxy) && /co
 check('F1 proxy has an upstream timeout', /UPSTREAM_TIMEOUT_MS = 8_000/.test(proxy) && /controller\.abort\(\)/.test(proxy))
 check('F1 proxy error responses are not cached', /cache-control.*no-store/.test(proxy))
 check('F1 proxy success responses use bounded cache', /max-age=300.*stale-while-revalidate=600/.test(proxy))
+check('F1 proxy caps upstream response size', /MAX_RESPONSE_BYTES = 2_000_000/.test(proxy) && /upstream_response_too_large/.test(proxy) && /TextEncoder\(\)\.encode\(body\)\.byteLength/.test(proxy))
 check('F1 proxy has no user-controlled upstream URL', !/new URL\([^)]*searchParams|fetch\(url/i.test(proxy))
 
 check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\.${t} enable row level security`).test(migration)))
