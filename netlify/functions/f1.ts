@@ -8,6 +8,7 @@ const ALLOWED_RESOURCES = new Set<Resource>([
 ])
 const MAX_LIMIT = 100
 const MAX_OFFSET = 100_000
+const MAX_RESPONSE_BYTES = 2_000_000
 const UPSTREAM_TIMEOUT_MS = 8_000
 
 const json = (body: unknown, status = 200, cache = false) => new Response(JSON.stringify(body), {
@@ -55,7 +56,15 @@ export default async (request: Request, _context: Context) => {
       return json({ error: 'upstream_unavailable' }, upstream.status === 429 ? 503 : 502)
     }
 
-    return new Response(await upstream.text(), {
+    const declaredLength = Number(upstream.headers.get('content-length') || 0)
+    if (declaredLength > MAX_RESPONSE_BYTES) return json({ error: 'upstream_response_too_large' }, 502)
+
+    const body = await upstream.text()
+    if (new TextEncoder().encode(body).byteLength > MAX_RESPONSE_BYTES) {
+      return json({ error: 'upstream_response_too_large' }, 502)
+    }
+
+    return new Response(body, {
       status: 200,
       headers: {
         'content-type': 'application/json; charset=utf-8',
