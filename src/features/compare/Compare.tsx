@@ -3,6 +3,8 @@ import { Activity, ArrowLeftRight, Flag, Trophy } from 'lucide-react'
 import { fetchVerifiedSeasonStandings } from '../../data/jolpicaRepository'
 import { motorsportRepository } from '../../data/motorsportRepository'
 import type { Driver, DriverStanding } from '../../types/domain'
+import { useAuth } from '../../auth/AuthProvider'
+import { deleteSavedComparison, listSavedComparisons, saveComparison } from '../../lib/userData'
 import './compare.css'
 
 const SEASON = 2026
@@ -22,7 +24,7 @@ export function Compare() {
   const [data, setData] = useState<CompareData | null>(null)
   const [error, setError] = useState(false)
   const [leftId, setLeftId] = useState('')
-  const [rightId, setRightId] = useState('')
+  const [rightId, setRightId] = useState('')\n  const [saved, setSaved] = useState<Array<{ id: string; title: string; left_entity_id: string; right_entity_id: string }>>([])\n  const [saveStatus, setSaveStatus] = useState<string | null>(null)\n  const { user } = useAuth()
 
   useEffect(() => {
     let active = true
@@ -40,7 +42,7 @@ export function Compare() {
     return () => { active = false }
   }, [])
 
-  const left = useMemo(() => data?.drivers.find((item) => item.driverId === leftId), [data, leftId])
+  useEffect(() => {\n    if (!user) return\n    void listSavedComparisons(user.id).then((items) => setSaved(items.map((item) => ({ id: item.id, title: item.title, left_entity_id: item.left_entity_id, right_entity_id: item.right_entity_id })))).catch(() => undefined)\n  }, [user])\n\n  const persistComparison = async () => {\n    if (!user || !left || !right || leftId === rightId) return\n    setSaveStatus(null)\n    try {\n      const item = await saveComparison(user.id, { title: `${leftDriver?.fullName ?? leftId} vs ${rightDriver?.fullName ?? rightId}`, comparison_type: 'driver-driver', left_entity_id: leftId, right_entity_id: rightId })\n      setSaved((items) => [{ id: item.id, title: item.title, left_entity_id: item.left_entity_id, right_entity_id: item.right_entity_id }, ...items])\n      setSaveStatus('Comparison saved.')\n    } catch { setSaveStatus('Could not save comparison.') }\n  }\n\n  const removeComparison = async (id: string) => {\n    if (!user) return\n    try { await deleteSavedComparison(user.id, id); setSaved((items) => items.filter((item) => item.id !== id)) } catch { setSaveStatus('Could not remove comparison.') }\n  }\n\n  const left = useMemo(() => data?.drivers.find((item) => item.driverId === leftId), [data, leftId])
   const right = useMemo(() => data?.drivers.find((item) => item.driverId === rightId), [data, rightId])
   const leftDriver = data?.catalogDrivers.find((item) => item.id === leftId)
   const rightDriver = data?.catalogDrivers.find((item) => item.id === rightId)
@@ -69,7 +71,7 @@ export function Compare() {
         <article className="driver-card driver-card-right"><div><p className="eyebrow">DRIVER B</p><h2>{rightDriver.fullName}</h2><p>{rightDriver.nationality} · {right.teamIds[0] ? data.teams[right.teamIds[0]] ?? right.teamIds[0] : 'Team unavailable'}</p></div><strong>{right.points}<small> PTS</small></strong><span className="driver-number">{rightDriver.number ?? '—'}</span></article>
       </section>
       <section className="panel metrics-panel"><div className="panel-heading"><div><p className="eyebrow">HEAD TO HEAD</p><h2>Championship metrics</h2></div><Trophy size={18} /></div>{metrics.map((metric) => <div className="metric-row" key={metric.label}><span className={metric.winner === 'left' ? 'metric-value winner' : 'metric-value'}>{metric.left}</span><div><span className="metric-label">{metric.label}</span><div className="metric-track"><span style={{ width: `${Math.min(100, Math.abs(Number(metric.left) || 0) / Math.max(1, Math.max(Number(metric.left) || 0, Number(metric.right) || 0)) * 100)}%` }} /></div></div><span className={metric.winner === 'right' ? 'metric-value winner' : 'metric-value'}>{metric.right}</span></div>)}</section>
-      <p className="compare-provenance">Provenance: verified Jolpica F1 standings for the {SEASON} season. Position, points and wins are the only comparison metrics currently supported by this ingestion slice. Qualifying pace, teammate deltas, DNFs and race-by-race trends remain intentionally unavailable until their data pipeline is implemented.</p>
+      <section className="panel saved-comparisons"><div className="panel-heading"><div><p className="eyebrow">PRIVATE WORKSPACE</p><h2>Saved comparisons</h2></div><button className="secondary-button" onClick={() => void persistComparison()} disabled={!user || leftId === rightId}>Save current</button></div>{saveStatus && <p>{saveStatus}</p>}{saved.length === 0 ? <p>No saved comparisons yet.</p> : saved.map((item) => <div className="saved-comparison" key={item.id}><span>{item.title}</span><button className="icon-button" onClick={() => void removeComparison(item.id)} aria-label={`Delete ${item.title}`}>×</button></div>)}</section>\n      <p className="compare-provenance">Provenance: verified Jolpica F1 standings for the {SEASON} season. Position, points and wins are the only comparison metrics currently supported by this ingestion slice. Qualifying pace, teammate deltas, DNFs and race-by-race trends remain intentionally unavailable until their data pipeline is implemented.</p>
     </> : <section className="compare-empty"><Flag size={20} /><h2>Choose two different drivers</h2><p>The comparison needs two valid championship records.</p></section>}
   </main>
 }
