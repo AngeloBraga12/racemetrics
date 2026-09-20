@@ -34,7 +34,12 @@ const authScreen = read('src/auth/AuthScreen.tsx')
 const supabase = read('src/lib/supabase.ts')
 const headers = read('public/_headers')
 const proxy = read('netlify/functions/f1.ts')
-const migration = read('supabase/migrations/202609110001_private_user_data.sql')
+const migrationDir = join(root, 'supabase/migrations')
+const migrationFiles = existsSync(migrationDir)
+  ? readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort()
+  : []
+const migration = migrationFiles.map(name => readFileSync(join(migrationDir, name), 'utf8')).join('\n')
+check('private data migrations exist', migrationFiles.some(name => /private_user_data\\.sql$/.test(name)))
 
 check('package remains private', pkg.private === true)
 check('security test is wired into npm scripts', pkg.scripts?.['test:security'] === 'node scripts/security-audit.mjs')
@@ -71,6 +76,8 @@ check('F1 proxy caps upstream response size', /MAX_RESPONSE_BYTES = 2_000_000/.t
 check('F1 proxy has Netlify per-IP rate limiting', /rateLimit:\s*\{[\s\S]*windowLimit: 60[\s\S]*windowSize: 60[\s\S]*aggregateBy: \['ip', 'domain'\]/.test(proxy))
 check('F1 proxy has no user-controlled upstream URL', !/new URL\([^)]*searchParams|fetch\(url/i.test(proxy))
 
+check('least-privilege authenticated grants', /grant select, insert, update on table public\.profiles to authenticated/.test(migration) && /grant select, insert, update on table public\.preferences to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.favorites to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.saved_comparisons to authenticated/.test(migration))
+check('no elevated table grants for authenticated', !/grant .*\\b(truncate|references|trigger)\\b.* to authenticated/i.test(migration))
 check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\.${t} enable row level security`).test(migration)))
 check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\.${t} from anon`).test(migration)))
 check('policies target authenticated role', (migration.match(/to authenticated/g) || []).length >= 12)
