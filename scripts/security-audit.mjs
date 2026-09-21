@@ -39,7 +39,6 @@ const migrationFiles = existsSync(migrationDir)
   ? readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort()
   : []
 const migration = migrationFiles.map(name => readFileSync(join(migrationDir, name), 'utf8')).join('\n')
-const rlsMigration = migrationFiles.filter(name => /private_user_data|tighten_private_table_grants|lock_down_rls/i.test(name)).map(name => readFileSync(join(migrationDir, name), 'utf8')).join('\n')
 check('private data migrations exist', migrationFiles.some(name => /private_user_data\.sql$/.test(name)))
 
 check('package remains private', pkg.private === true)
