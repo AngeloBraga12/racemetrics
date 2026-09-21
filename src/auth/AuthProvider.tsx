@@ -75,6 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
       setSession(nextSession)
+      if (nextSession?.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN')) {
+        void ensureUserData(
+          nextSession.user.id,
+          nextSession.user.user_metadata?.display_name ?? nextSession.user.user_metadata?.name,
+        ).catch(() => undefined)
+      }
       if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
       if (event === 'SIGNED_OUT') setPasswordRecovery(false)
     })
