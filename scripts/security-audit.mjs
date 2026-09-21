@@ -39,6 +39,7 @@ const migrationFiles = existsSync(migrationDir)
   ? readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort()
   : []
 const migration = migrationFiles.map(name => readFileSync(join(migrationDir, name), 'utf8')).join('\n')
+const rlsMigration = migrationFiles.filter(name => /private_user_data|tighten_private_table_grants|lock_down_rls/i.test(name)).map(name => readFileSync(join(migrationDir, name), 'utf8')).join('\n')
 check('private data migrations exist', migrationFiles.some(name => /private_user_data\.sql$/.test(name)))
 
 check('package remains private', pkg.private === true)
@@ -87,7 +88,8 @@ check('all four update policies define WITH CHECK', (migration.match(/for update
 check('trigger function is SECURITY INVOKER', /set_updated_at\(\)[\s\S]*?security invoker/.test(migration))
 check('SECURITY DEFINER trigger pins search_path', /handle_new_user\(\)[\s\S]*?security definer[\s\S]*?set search_path = public/.test(migration))
 
-const sourceFiles = allFiles(join(root, 'src'))
+check('favorite uniqueness migration exists', migrationFiles.some(name => /add_favorite_uniqueness\.sql$/.test(name)))
+\nconst sourceFiles = allFiles(join(root, 'src'))
 const sourceText = sourceFiles.map(file => `${relative(root, file)}\n${readFileSync(file, 'utf8')}`).join('\n')
 for (const pattern of [
   /dangerouslySetInnerHTML/,
