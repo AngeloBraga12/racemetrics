@@ -78,8 +78,8 @@ check('F1 proxy has no user-controlled upstream URL', !/new URL\([^)]*searchPara
 
 check('least-privilege authenticated grants', /grant select, insert, update on table public\.profiles to authenticated/.test(migration) && /grant select, insert, update on table public\.preferences to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.favorites to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.saved_comparisons to authenticated/.test(migration))
 check('no elevated table grants for authenticated', !/grant .*\b(truncate|references|trigger)\b.* to authenticated/i.test(migration))
-check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\.${t} enable row level security`).test(migration)))
-check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\.${t} from anon`).test(migration)))
+check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\\\.${t} enable row level security`).test(migration)))
+check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\\\.${t} from anon`).test(migration)))
 check('policies target authenticated role', (migration.match(/to authenticated/g) || []).length >= 12)
 check('ownership policies use auth.uid()', (migration.match(/auth\.uid\(\)/g) || []).length >= 12)
 check('all four tables define update ownership policies', (migration.match(/for update to authenticated/g) || []).length === 4)
@@ -87,8 +87,14 @@ check('all four update policies define WITH CHECK', (migration.match(/for update
 check('trigger function is SECURITY INVOKER', /set_updated_at\(\)[\s\S]*?security invoker/.test(migration))
 check('SECURITY DEFINER trigger pins search_path', /handle_new_user\(\)[\s\S]*?security definer[\s\S]*?set search_path = public/.test(migration))
 
-check('favorite uniqueness migration exists', migrationFiles.some(name => /add_favorite_uniqueness\.sql$/.test(name)))
-\nconst sourceFiles = allFiles(join(root, 'src'))
+check(
+  'favorites enforce per-user entity uniqueness',
+  /unique\s*\(\s*user_id\s*,\s*entity_type\s*,\s*entity_id\s*\)/i.test(migration) ||
+  /unique\s+index[\s\S]*?favorites[\s\S]*?user_id[\s\S]*?entity_type[\s\S]*?entity_id/i.test(migration),
+  'expected a unique constraint or unique index on (user_id, entity_type, entity_id)',
+)
+
+const sourceFiles = allFiles(join(root, 'src'))
 const sourceText = sourceFiles.map(file => `${relative(root, file)}\n${readFileSync(file, 'utf8')}`).join('\n')
 for (const pattern of [
   /dangerouslySetInnerHTML/,
