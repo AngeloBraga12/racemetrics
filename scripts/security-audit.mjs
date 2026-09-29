@@ -78,8 +78,8 @@ check('F1 proxy has no user-controlled upstream URL', !/new URL\([^)]*searchPara
 
 check('least-privilege authenticated grants', /grant select, insert, update on table public\.profiles to authenticated/.test(migration) && /grant select, insert, update on table public\.preferences to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.favorites to authenticated/.test(migration) && /grant select, insert, update, delete on table public\.saved_comparisons to authenticated/.test(migration))
 check('no elevated table grants for authenticated', !/grant .*\b(truncate|references|trigger)\b.* to authenticated/i.test(migration))
-check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\\\.${t} enable row level security`).test(migration)))
-check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\\\.${t} from anon`).test(migration)))
+check('all private tables enable RLS', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`alter table public\\.${t} enable row level security`).test(migration)))
+check('private tables revoke anonymous access', ['profiles', 'preferences', 'favorites', 'saved_comparisons'].every(t => new RegExp(`revoke all on public\\.${t} from anon`).test(migration)))
 check('policies target authenticated role', (migration.match(/to authenticated/g) || []).length >= 12)
 check('ownership policies use auth.uid()', (migration.match(/auth\.uid\(\)/g) || []).length >= 12)
 check('all four tables define update ownership policies', (migration.match(/for update to authenticated/g) || []).length === 4)
