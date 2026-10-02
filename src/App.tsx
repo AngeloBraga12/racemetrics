@@ -7,7 +7,7 @@ import { Compare } from './features/compare/Compare'
 import { Settings } from './features/settings/Settings'
 import { fetchVerifiedSeasonStandings } from './data/jolpicaRepository'
 import { motorsportRepository } from './data/motorsportRepository'
-import type { Driver, DriverStanding, MotorsportCatalog } from './types/domain'
+import type { DriverStanding, MotorsportCatalog } from './types/domain'
 
 type View = 'dashboard' | 'explore' | 'compare' | 'analytics' | 'settings'
 const SEASON = 2026
