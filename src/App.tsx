@@ -5,6 +5,7 @@ import { Explore } from './features/explore/Explore'
 import { Analytics } from './features/analytics/Analytics'
 import { Compare } from './features/compare/Compare'
 import { Settings } from './features/settings/Settings'
+import { EntityDetails } from './features/details/EntityDetails'
 import { fetchVerifiedSeasonStandings } from './data/jolpicaRepository'
 import { motorsportRepository } from './data/motorsportRepository'
 import type { DriverStanding, MotorsportCatalog } from './types/domain'
@@ -55,6 +56,7 @@ function Dashboard() {
 
 function App() {
   const { user, signOut } = useAuth()
+  const [detailRoute, setDetailRoute] = useState<{ kind: import('./types/domain').EntityKind; id: string } | null>(() => { const parts = window.location.hash.replace('#','').split('/'); return parts[0] === 'detail' && parts[1] && parts[2] ? { kind: parts[1] as import('./types/domain').EntityKind, id: parts.slice(2).join('/') } : null })
   const [view, setView] = useState<View>(() => {
     const hash = window.location.hash.replace('#', '') as View
     return ['dashboard','explore','compare','analytics','settings'].includes(hash) ? hash : 'dashboard'
@@ -63,13 +65,16 @@ function App() {
   const navigate = (next: View) => { setView(next); window.location.hash = next }
   useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash.replace('#', '') as View
-      if (['dashboard','explore','compare','analytics','settings'].includes(hash)) setView(hash)
+      const raw = window.location.hash.replace('#', '')
+      const parts = raw.split('/')
+      if (parts[0] === 'detail' && parts[1] && parts[2]) { setDetailRoute({ kind: parts[1] as import('./types/domain').EntityKind, id: parts.slice(2).join('/') }); return }
+      setDetailRoute(null)
+      if (['dashboard','explore','compare','analytics','settings'].includes(raw)) setView(raw as View)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
-  const currentView = view === 'dashboard' ? <Dashboard /> : view === 'explore' ? <Explore /> : view === 'compare' ? <Compare /> : view === 'analytics' ? <Analytics /> : <Settings />
+  const currentView = detailRoute ? <EntityDetails kind={detailRoute.kind} id={detailRoute.id} onBack={() => navigate('explore')} /> : view === 'dashboard' ? <Dashboard /> : view === 'explore' ? <Explore /> : view === 'compare' ? <Compare /> : view === 'analytics' ? <Analytics /> : <Settings />
   return <div className="app-shell"><header className="topbar"><button className="brand brand-button" onClick={() => navigate('dashboard')} aria-label="RaceMetrics início"><span className="brand-mark">RM</span><span>RaceMetrics</span></button><nav className="nav" aria-label="Navegação principal">{(['dashboard','explore','compare','analytics'] as const).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => navigate(item)}>{item[0].toUpperCase() + item.slice(1)}</button>)}</nav><div className="topbar-actions"><button className="icon-button" aria-label="Pesquisar" onClick={() => navigate('explore')}><Search size={18} /></button><button className={view === 'settings' ? 'profile-button active' : 'profile-button'} title={user?.email ?? 'Conta'} onClick={() => navigate('settings')}><CircleUserRound size={18} /><span>{displayName}</span></button><button className="icon-button" aria-label="Sair" onClick={() => void signOut()}><LogOut size={17} /></button></div></header><nav className="mobile-nav" aria-label="Navegação mobile">{(['dashboard','explore','compare','analytics','settings'] as const).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => navigate(item)}>{item === 'dashboard' ? 'Home' : item[0].toUpperCase() + item.slice(1)}</button>)}</nav>{currentView}</div>
 }
 
