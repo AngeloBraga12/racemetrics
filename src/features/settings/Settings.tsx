@@ -25,8 +25,8 @@ export function Settings() {
       if (!active) return
       setDisplayName(profile?.display_name ?? user.user_metadata?.display_name ?? '')
       setAvatarUrl(profile?.avatar_url ?? '')
-      setTheme(preferences?.theme ?? 'dark')
-      setDensity(preferences?.density ?? 'comfortable')
+      setTheme((preferences?.theme as Theme) ?? 'dark')
+      setDensity((preferences?.density as Density) ?? 'comfortable')
       setFavoriteSeries(preferences?.favorite_series ?? 'f1')
       setLoading(false)
     }).catch(() => {
