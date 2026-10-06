@@ -1,0 +1,78 @@
+.entity-analysis {
+  margin-top: 12px;
+}
+
+.entity-analysis .panel-heading {
+  min-height: 74px;
+}
+
+.progression-list {
+  padding: 6px 20px 18px;
+}
+
+.progression-row {
+  display: grid;
+  grid-template-columns: 42px minmax(120px, 1fr) 82px 54px;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  border-top: 1px solid #1d2026;
+  font-size: 11px;
+}
+
+.progression-row > span {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.progression-row strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.progression-row small {
+  color: #686f79;
+  text-align: right;
+}
+
+.progression-track {
+  height: 5px;
+  background: #1b1e24;
+  overflow: hidden;
+}
+
+.progression-track i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  min-width: 2px;
+}
+
+.entity-source-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: #0d0f12;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.entity-source-note svg {
+  flex: 0 0 auto;
+  color: #9dd8b4;
+}
+
+@media (max-width: 720px) {
+  .progression-row {
+    grid-template-columns: 34px minmax(70px, 1fr) 66px;
+    gap: 8px;
+  }
+
+  .progression-row small {
+    display: none;
+  }
+}
